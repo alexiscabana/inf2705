@@ -1,0 +1,16 @@
+.text {
+    position:absolute;
+    top:20px;
+    left:20px;
+    font-size:1em;
+    color: orange;
+}
+
+a:link { color: yellow; }
+a:hover { color: #bbaa00; }
+
+.canevas {
+    height: 600px;
+    width: 900px;
+    border: 5px solid orange;
+}

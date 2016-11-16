@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>TP - WebGL</title>
+<link rel="stylesheet" href="tp.css" type="text/css" media="all">
+
+<script type="text/javascript" src="webgl-utils.js"></script>
+<script type="text/javascript" src="webgl-debug.js"></script>
+<script type="text/javascript" src="J3DI.js"></script>
+<script type="text/javascript" src="J3DIMath.js"></script>
+<script type="text/javascript" src="main.js"></script>
+
+<script id="nuanceurSommets" type="x-shader/x-vertex">
+  uniform mat4 u_modelViewProjMatrix;
+  uniform mat4 u_normalMatrix;
+  uniform vec3 lightDir;
+
+  attribute vec3 vNormal;
+  attribute vec4 vTexCoord;
+  attribute vec4 vPosition;
+
+  varying float v_NdotL;
+  varying vec2 v_texCoord;
+
+  void main()
+  {
+      // assigner la position du sommet
+      gl_Position = u_modelViewProjMatrix * vPosition;
+
+      // assigner les coordonnées de texture
+      v_texCoord = vTexCoord.st;
+
+      // calculer la normale
+      vec4 transNormal = u_normalMatrix * vec4( vNormal, 1 );
+      // calculer le produit scalaire pour le calcul de la réflexion diffuse (Lambert)
+      // NdotL = normale . direction de la lumière
+      v_NdotL = max( dot( transNormal.xyz, lightDir ), 0.0 );
+  }
+</script>
+
+<script id="nuanceurFragments" type="x-shader/x-fragment">
+  // informer du degré de précision qu'on veut dans les calculs
+  // (Plus à ce sujet: http://stackoverflow.com/questions/5366416/in-opengl-es-2-0-glsl-where-do-you-need-precision-specifiers/6336285#6336285 )
+  precision mediump float;
+
+  uniform sampler2D laTexture;
+  uniform vec2 posSouris;
+  uniform int doitMontrerCercle;
+
+
+  varying float v_NdotL;
+  varying vec2 v_texCoord;
+
+  void main()
+  {
+      vec4 coulCercle = vec4(1.0, 0.0, 0.0, 0.7);
+      vec4 coulFrag;
+      // obtenir la couleur de la texture
+      vec4 coul = texture2D( laTexture, v_texCoord.st );
+      // ajouter un peu de lumière ambiante pour éclairer les coins sombres...
+      vec4 ambiant = vec4( 0.1, 0.1, 0.1, 1.0 );
+      coul += ambiant;
+      
+      // assigner la couleur du fragment
+      coulFrag = vec4( coul.xyz * v_NdotL, coul.a );
+      
+      if(doitMontrerCercle == 1)
+      {
+        float dist =  length(posSouris.xy - gl_FragCoord.xy);
+        if (dist <= 50.0 )
+          coulFrag = coulCercle*coulCercle.a + (1.0 - coulCercle.a) * coulFrag;
+      }
+
+      gl_FragColor = coulFrag;
+  }
+</script>
+
+</head>
+
+<body onload="TPdebut()">
+<canvas class="canevas" id="tp-canevas" height="600" width="900">
+  Si vous voyez ceci, votre navigateur ne supporte pas webgl.
+</canvas>
+
+<div class="text">Les <a href="http://www.khronos.org/registry/webgl/specs/latest/1.0/">spécifications de Webgl</a> sont<br>remplies d'informations intéressantes.</div>
+
+</body>
+</html>
